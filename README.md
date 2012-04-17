@@ -29,6 +29,18 @@ TBD.
 * read-only
 * read/write
 
+## Tricks
+
+### Record an active tmux session
+
+```bash
+# From any shell in your tmux session:
+% TMUX= ruby shatty.rb record --headless tmux -2 attach
+```
+
+The '--headless' is required otherwise you end up tmux printing to tmux and you get a loop.
+
+
 ## TODO
 
 * Improved player
