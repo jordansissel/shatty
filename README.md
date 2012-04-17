@@ -2,6 +2,12 @@
 
 share tty.
 
+## Play a demo recording
+
+```
+% ruby shatty.rb play examples/output.shatty
+```
+
 ## Recording
 
 ```
