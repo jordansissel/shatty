@@ -5,6 +5,8 @@ class Shatty < Clamp::Command
   subcommand "record", "Record a command" do
     option ["-f", "--file"], "FILE", "file to record to",
       :default => "output.shatty"
+    option "--headless", :flag,
+      "headless mode; don't output anything to stdout"
     parameter "COMMAND ...", "The command to run",
       :attribute_name => :command
 
@@ -38,7 +40,8 @@ class Shatty < Clamp::Command
         # for each chunk of text read from tmux, record
         # the timestamp (duration since 'start' of recording)
         out.syswrite([time_offset.to_f, buffer.length, buffer].pack("GNA#{buffer.length}"))
-        $stdout.write(buffer)
+
+        $stdout.write(buffer) unless headless?
       end
 
       system("stty sane")
