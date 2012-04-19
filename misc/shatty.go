@@ -122,16 +122,17 @@ func forkpty(name string, argv []string, attr *os.ProcAttr) (master *os.File, co
   //command.Stdout = slave
   //command.Stderr = slave
   command.Process, err = os.StartProcess(name, argv, attr)
-  if err != nil { return nil, nil, err }
   slave.Close()
+  if err != nil { return nil, nil, err }
 
   /* Now in the parent */
-  //command.Stdin, err = dup(master, "<stdin>")
-  //command.Stdout, err = dup(master, "<stdout>")
-  //command.Stderr, err = dup(master, "<stderr>")
-  command.Stdin = master
-  command.Stdout = master
-  command.Stderr = master
+  command.Stdin, err = dup(master, "<stdin>")
+  command.Stdout, err = dup(master, "<stdout>")
+  command.Stderr, err = dup(master, "<stderr>")
+  //command.Stdin = master
+  //command.Stdout = master
+  //command.Stderr = master
+  //master.Close()
 
   if err != nil { return nil, nil, err }
   return master, command, nil
@@ -161,9 +162,11 @@ func main() {
   _, err = command.Stdin.(*os.File).WriteString("tty\n")
   if err != nil { fmt.Printf("Fprintf: %v\n", err); return }
   time.Sleep(500 * time.Millisecond)
-  _, err = command.Stdin.(*os.File).WriteString("exit\n")
-  if err != nil { fmt.Printf("Fprintf: %v\n", err); return }
+  //_, err = command.Stdin.(*os.File).WriteString("exit\n")
+  //if err != nil { fmt.Printf("Fprintf: %v\n", err); return }
+  master.Close()
 
+  /* It would be nice if this actually closed stdin for the subcommand */
   command.Stdin.(*os.File).Close()
   fmt.Printf("Wait: %v\n", command.Wait())
 
