@@ -1,18 +1,29 @@
 require "clamp"
 require "pty"
+require "ftw"
 
 class Shatty < Clamp::Command
   subcommand "record", "Record a command" do
-    option ["-f", "--file"], "FILE", "file to record to",
+    option ["-o", "--output"], "PATH_OR_URL",
+      "where to output the recording to (a path or url)",
       :default => "output.shatty"
     option "--headless", :flag,
-      "headless mode; don't output anything to stdout"
+      "headless mode; don't output anything to stdout."
     parameter "COMMAND ...", "The command to run",
       :attribute_name => :command
 
     def execute
-      out = File.new(file, "w")
       start = Time.now
+      if output =~ /^https?:/
+        agent = FTW::Agent.new
+        stream, out = IO::pipe
+        Thread.new { 
+          response = agent.post!(output, :body => stream)
+          # TODO(sissel): Shouldn't get here...
+        }
+      else
+        out = File.new(output, "w")
+      end
 
       # binary mode.
       buffer = ""
@@ -49,13 +60,24 @@ class Shatty < Clamp::Command
   end # subcommand "record"
 
   subcommand "play", "Play a recording" do
-    parameter "[FILE]", "the file to play (same as --file)",
-      :attribute_name => :file
-    option ["-f", "--file"], "FILE", "file to play",
-      :default => "output.shatty"
+    parameter "[PATH_OR_URL]",
+      "The recording to play. This can be a path or URL.",
+      :attribute_name => :path
 
     def execute
-      input = File.new(file, "r")
+      # TODO(sissel): Don't abort :(
+      Thread.abort_on_exception = true 
+
+      if path =~ /^https?:/
+        input, writer = IO::pipe
+        Thread.new do 
+          agent = FTW::Agent.new
+          response = agent.get!(path)
+          response.read_http_body { |chunk| writer.syswrite(chunk) }
+        end
+      else
+        input = File.new(path, "w")
+      end
 
       start = nil
 
@@ -65,17 +87,15 @@ class Shatty < Clamp::Command
       while true
         # Read the header
         begin
-          buffer = input.sysread(headersize)
-          #p input.pos => buffer
+          buffer = input.read(headersize)
           time, length = buffer.unpack("GN")
-          buffer = input.sysread(length)
-          #p input.pos => [ time_offset, length ]
+          buffer = input.read(length)
         rescue EOFError
           break
         end
 
         # Sleep if necessary
-        sleep(time - last_time) if last_time > 0
+        #sleep(time - last_time) if last_time > 0
         last_time = time
 
         # output this frame.
