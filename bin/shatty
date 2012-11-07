@@ -9,8 +9,8 @@ class Shatty < Clamp::Command
       "where to output the recording to (a path or url)"
     option "--headless", :flag,
       "headless mode; don't output anything to stdout."
-    parameter "COMMAND ...", "The command to run",
-      :attribute_name => :command
+    parameter "[COMMAND] ...", "The command to run",
+      :attribute_name => :command, :default => ENV["SHELL"]
 
     def execute
       start = Time.now
