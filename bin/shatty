@@ -14,9 +14,8 @@ class Shatty < Clamp::Command
 
     def execute
       start = Time.now
-
       if output.nil?
-        output = "http://r.logstash.net:8200/s/#{UUIDTools::UUID.random_create}"
+        self.output = "http://r.logstash.net:8200/s/#{UUIDTools::UUID.random_create}"
         puts "Sending output to: #{output}"
       end
 
