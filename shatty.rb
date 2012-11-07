@@ -1,12 +1,12 @@
 require "clamp"
 require "pty"
 require "ftw"
+require "uuidtools"
 
 class Shatty < Clamp::Command
   subcommand "record", "Record a command" do
     option ["-o", "--output"], "PATH_OR_URL",
-      "where to output the recording to (a path or url)",
-      :default => "output.shatty"
+      "where to output the recording to (a path or url)"
     option "--headless", :flag,
       "headless mode; don't output anything to stdout."
     parameter "COMMAND ...", "The command to run",
@@ -14,6 +14,12 @@ class Shatty < Clamp::Command
 
     def execute
       start = Time.now
+
+      if output.nil?
+        output = "http://r.logstash.net:8200/s/#{UUIDTools::UUID.random_create}"
+        puts "Sending output to: #{output}"
+      end
+
       if output =~ /^https?:/
         agent = FTW::Agent.new
         stream, out = IO::pipe
@@ -22,6 +28,7 @@ class Shatty < Clamp::Command
           # TODO(sissel): Shouldn't get here...
         }
       else
+        # no http/https, assume file output.
         out = File.new(output, "w")
       end
 
