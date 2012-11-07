@@ -30,13 +30,13 @@ class Session
   def raw
     return Enumerator.new do |y|
       enumerator.each do |chunk|
-        puts decode(chunk).inspect
         y << decode(chunk)
       end
     end # Enumerator
   end # def enumerator
 
   def decode(chunk)
+    headersize = [1,1].pack("GN").size
     return chunk[headersize .. -1]
   end # def decode
 
@@ -68,6 +68,7 @@ server = FTW::WebServer.new("0.0.0.0", port) do |request, response|
       response["Content-Type"] = "text/plain"
       if request["user-agent"] =~ /^curl\/[0-9]/
         # Curl. Send raw text.
+        puts "curl request"
         response.body = session.raw
       else
         response.body = session.enumerator
@@ -81,4 +82,5 @@ server = FTW::WebServer.new("0.0.0.0", port) do |request, response|
   end
 end
 
+Thread.abort_on_exception = true
 server.run
