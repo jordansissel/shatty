@@ -1,10 +1,12 @@
+#!/usr/bin/env ruby
+
 require "clamp"
 require "pty"
 require "ftw"
 require "uuidtools"
 
 class Shatty < Clamp::Command
-  subcommand "record", "Record a command" do
+  subcommand "share", "Share a terminal session (read only for now)" do
     option ["-o", "--output"], "PATH_OR_URL",
       "where to output the recording to (a path or url)"
     option "--headless", :flag,
