@@ -66,9 +66,8 @@ server = FTW::WebServer.new("0.0.0.0", port) do |request, response|
     elsif request.method == "GET"
       response.status = 200
       response["Content-Type"] = "text/plain"
-      if request["user-agent"] =~ /^curl\/[0-9]/
-        # Curl. Send raw text.
-        puts "curl request"
+      if request["user-agent"] =~ /^(curl|Wget)/
+        # Curl or wget. Send raw text.
         response.body = session.raw
       else
         response.body = session.enumerator
