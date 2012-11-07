@@ -2,25 +2,80 @@ require "ftw" # gem ftw
 require "cabin" # gem cabin
 require "thread"
 
-queue = Queue.new
-recent = []
+ShutdownSignal = :shutdown
 
-server = FTW::WebServer.new("0.0.0.0", ENV["PORT"].to_i || 8888) do |request, response|
+class Session
+  def initialize
+    @queue = Queue.new
+    @recent = []
+  end # def initialize
+
+  def <<(chunk)
+    @queue << chunk
+    @recent << chunk
+    @recent = @recent[0..100]
+  end # def push
+
+  def enumerator
+    return Enumerator.new do |y|
+      @recent.each { |chunk| y << chunk }
+      while true
+        chunk = @queue.pop
+        break if chunk == ShutdownSignal
+        y << chunk
+      end
+    end # Enumerator
+  end # def enumerator
+
+  def raw
+    return Enumerator.new do |y|
+      enumerator.each do |chunk|
+        puts decode(chunk).inspect
+        y << decode(chunk)
+      end
+    end # Enumerator
+  end # def enumerator
+
+  def decode(chunk)
+    return chunk[headersize .. -1]
+  end # def decode
+
+  def close
+    @queue << ShutdownSignal
+  end
+end # class Session
+
+sessions = {}
+
+port = ENV.include?("PORT") ? ENV["PORT"].to_i : 8888
+server = FTW::WebServer.new("0.0.0.0", port) do |request, response|
   @logger = Cabin::Channel.get
-  if request.method == "POST" and request.path == "/share/live/example"
-    response.status = 200
-    request.read_http_body do |chunk|
-      queue.push(chunk)
-      recent.push(chunk)
-      recent = recent[0..100]
+  if request.path =~ /^\/s\//
+    session = sessions[request.path] ||= Session.new
+    if request.method == "POST"
+      # TODO(sissel): Check if a session exists.
+
+      begin
+        request.read_http_body do |chunk|
+          session << chunk
+        end
+      rescue EOFError
+      end
+      session.close
+      sessions.delete(request.path)
+    elsif request.method == "GET"
+      response.status = 200
+      response["Content-Type"] = "text/plain"
+      if request["user-agent"] =~ /^curl\/[0-9]/
+        # Curl. Send raw text.
+        response.body = session.raw
+      else
+        response.body = session.enumerator
+      end
+    else
+      response.status = 400
+      response.body = "Invalid method '#{request.method}'\n"
     end
-  elsif request.method == "GET" and request.path == "/share/live/example"
-    response.status = 200
-    enumerator = Enumerator.new do |y| 
-      recent.each { |chunk| y << chunk }
-      y << queue.pop while true
-    end
-    response.body = enumerator
   else
     response.status = 404
   end
