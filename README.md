@@ -50,3 +50,7 @@ The '--headless' is required otherwise you end up tmux printing to tmux and you 
 * Improve & document recording format
   * Currently a sequence of [play_time, length, data].pack("GNA*")
 * Implement a terminal emulator so we can calculate key frames to better support playback/rewind
+
+## web server
+
+You can run the webserver (basically a thin proxy) with 'ruby web.rb'
