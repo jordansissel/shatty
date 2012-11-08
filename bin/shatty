@@ -17,8 +17,12 @@ class Shatty < Clamp::Command
     def execute
       start = Time.now
       if output.nil?
-        self.output = "http://r.logstash.net:8200/s/#{UUIDTools::UUID.random_create}"
+        self.output = "http://shatty.semicomplete.com/s/#{UUIDTools::UUID.random_create}"
         puts "Sending output to: #{output}"
+        puts "View commands"
+        puts "  wget -qO- #{output}"
+        puts "  curl -Lso- #{output}"
+        puts "  shatty play #{output}"
       end
 
       if output =~ /^https?:/
