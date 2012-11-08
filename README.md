@@ -2,32 +2,28 @@
 
 share tty.
 
-## Play a demo recording
+Install with 'gem install shatty'
+
+## start sharing
 
 ```
-% ruby shatty.rb play examples/output.shatty
+shatty share
 ```
 
-## Recording
+The defaults will:
 
-```
-% shatty.rb record <command>
-```
+* Run $SHELL
+* Generate a random endpoint on the shatty service
 
-By default will record to 'output.shatty'
+    % shatty share 
+    Sending output to: http://shatty.semicomplete.com:8200/s/88326b7f-f43e-4192-8987-c496b985abc1
+    View commands
+      wget -qO- http://shatty.semicomplete.com:8200/s/88326b7f-f43e-4192-8987-c496b985abc1
+      curl -Lso- http://shatty.semicomplete.com:8200/s/88326b7f-f43e-4192-8987-c496b985abc1
+      shatty play http://shatty.semicomplete.com:8200/s/88326b7f-f43e-4192-8987-c496b985abc1
 
-## Playback
-
-```
-% shatty.rb play output.shatty
-```
-
-## Sharing
-
-TBD.
-
-* read-only
-* read/write
+This lets you share a terminal over http. It's built such that wget and curl
+can act as viewers so whoever is viewing will not require the shatty player.
 
 ## Tricks
 
@@ -40,7 +36,6 @@ TBD.
 
 The '--headless' is required otherwise you end up tmux printing to tmux and you get a loop.
 
-
 ## TODO
 
 * Improved player
@@ -48,10 +43,8 @@ The '--headless' is required otherwise you end up tmux printing to tmux and you 
   * Tunable playing speed (1x, 2x, etc)
   * Search.
   * Pause/rewind/etc live while viewing or recording.
-* Online sharing
-  * Live sharing
-  * Multiuser
-  * Sharing recorded sessions
+* Sharing recorded sessions
+  * pastebin, gist, etc?
 * Terminal size options
   * Currently stuck at default 80x24, fix that.
 * Improve & document recording format
