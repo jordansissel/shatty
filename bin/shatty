@@ -4,6 +4,13 @@ require "clamp"
 require "pty"
 require "ftw"
 require "uuidtools"
+require "cabin"
+
+if $DEBUG
+  logger = Cabin::Channel.get
+  logger.level = :debug if $DEBUG
+  logger.subscribe(STDERR)
+end
 
 class Shatty < Clamp::Command
   subcommand "share", "Share a terminal session (read only for now)" do
@@ -17,7 +24,7 @@ class Shatty < Clamp::Command
     def execute
       start = Time.now
       if output.nil?
-        self.output = "http://shatty.semicomplete.com/s/#{UUIDTools::UUID.random_create}"
+        self.output = "http://shatty.semicomplete.com:8200/s/#{UUIDTools::UUID.random_create}"
         puts "Sending output to: #{output}"
         puts "View commands"
         puts "  wget -qO- #{output}"
@@ -63,8 +70,7 @@ class Shatty < Clamp::Command
         # for each chunk of text read from tmux, record
         # the timestamp (duration since 'start' of recording)
         out.syswrite([time_offset.to_f, buffer.length, buffer].pack("GNA#{buffer.length}"))
-
-        $stdout.write(buffer) unless headless?
+        $stdout.syswrite(buffer) unless headless?
       end
 
       system("stty sane")
