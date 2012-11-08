@@ -15,6 +15,8 @@ The defaults will:
 * Run $SHELL
 * Generate a random endpoint on the shatty service
 
+Here's an example:
+
     % shatty share 
     Sending output to: http://shatty.semicomplete.com:8200/s/88326b7f-f43e-4192-8987-c496b985abc1
     View commands
