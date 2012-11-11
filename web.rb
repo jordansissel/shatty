@@ -56,52 +56,56 @@ sessions = {}
 port = ENV.include?("PORT") ? ENV["PORT"].to_i : 8888
 server = FTW::WebServer.new("0.0.0.0", port) do |request, response|
   @logger = Cabin::Channel.get
-  if request.path =~ /^\/s\//
-    session = sessions[request.path] ||= Session.new
-    if request.method == "POST"
-      # TODO(sissel): Check if a session exists.
+  case request.path
+    when /^\/s\//
+      session = sessions[request.path] ||= Session.new
+      if request.method == "POST"
+        # TODO(sissel): Check if a session exists.
 
-      begin
-        request.read_http_body do |chunk|
-          session << chunk
+        begin
+          request.read_http_body do |chunk|
+            session << chunk
+          end
+        rescue EOFError
         end
-      rescue EOFError
-      end
-      session.close
-      sessions.delete(request.path)
-    elsif request.method == "GET"
-      response.status = 200
-      response["Content-Type"] = "text/plain"
-      queue = Queue.new
-      session.subscribe(queue)
-      if request["user-agent"] =~ /^(curl|Wget)/
-        # Curl or wget. Send raw text.
-        response.body = Enumerator.new do |y|
-          while true
-            chunk = queue.pop
-            break if chunk == ShutdownSignal
-            puts "Raw: #{chunk.inspect}"
-            y << Session.decode(chunk)
+        session.close
+        sessions.delete(request.path)
+      elsif request.method == "GET"
+        puts request
+        response.status = 200
+        response["Content-Type"] = "text/plain"
+        queue = Queue.new
+        session.subscribe(queue)
+        if request["user-agent"] =~ /^(curl|Wget)/
+          # Curl or wget. Send raw text.
+          response.body = Enumerator.new do |y|
+            while true
+              chunk = queue.pop
+              break if chunk == ShutdownSignal
+              puts "Raw: #{chunk.inspect}"
+              y << Session.decode(chunk)
+            end
+          end
+        else
+          response.body = Enumerator.new do |y|
+            while true
+              chunk = queue.pop
+              break if chunk == ShutdownSignal
+              puts "Plain: #{chunk.inspect}"
+              y << chunk
+            end
           end
         end
       else
-        response.body = Enumerator.new do |y|
-          while true
-            chunk = queue.pop
-            break if chunk == ShutdownSignal
-            puts "Plain: #{chunk.inspect}"
-            y << chunk
-          end
-        end
+        response.status = 400
+        response.body = "Invalid method '#{request.method}'\n"
       end
+    # end when /^\/s\/
     else
-      response.status = 400
-      response.body = "Invalid method '#{request.method}'\n"
-    end
-  else
-    response.status = 404
-  end
-end
+      response.status = 404
+      response.body = "No such file: #{request.path}"
+  end # end case request.path
+end # FTW::WebServer.new do ...
 
 Thread.abort_on_exception = true
 server.run
