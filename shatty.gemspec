@@ -9,6 +9,9 @@ Gem::Specification.new do |spec|
 
   # Note: You should set the version explicitly.
   spec.add_dependency "cabin", ">0" # for logging. apache 2 license
+  spec.add_dependency "clamp", ">0"
+  spec.add_dependency "ftw", ">0"
+  spec.add_dependency "uuidtools", ">0"
   spec.files = files
   spec.require_paths << "lib"
   spec.bindir = "bin"
