@@ -1,4 +1,4 @@
-# shatty
+#  :poop:tty
 
 share tty.
 
@@ -13,7 +13,7 @@ shatty share
 The defaults will:
 
 * Run $SHELL
-* Generate a random endpoint on the shatty service
+* Generate a random endpoint on the  :poop:tty service
 
 Here's an example:
 
@@ -25,7 +25,7 @@ Here's an example:
       shatty play http://shatty.semicomplete.com:8200/s/88326b7f-f43e-4192-8987-c496b985abc1
 
 This lets you share a terminal over http. It's built such that wget and curl
-can act as viewers so whoever is viewing will not require the shatty player.
+can act as viewers so whoever is viewing will not require the  :poop:tty player.
 
 ## Tricks
 
